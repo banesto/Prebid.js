@@ -5,6 +5,7 @@ var argv = require('yargs').argv;
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var connect = require('gulp-connect');
+var rename = require('gulp-rename');
 var webpack = require('webpack');
 var webpackStream = require('webpack-stream');
 var uglify = require('gulp-uglify');
@@ -30,7 +31,7 @@ const execa = require('execa');
 
 var prebid = require('./package.json');
 var dateString = 'Updated : ' + (new Date()).toISOString().substring(0, 10);
-var banner = '/* <%= prebid.name %> v<%= prebid.version %>\n' + dateString + ' */\n';
+var banner = '/* <%= prebid.name %> v<%= prebid.version %>\n' + dateString + "\nModules: <%= modules.length ? modules.join(', ') : 'all'  %> */\n";
 var port = 9999;
 const mockServerPort = 4444;
 const host = argv.host ? argv.host : 'localhost';
@@ -146,7 +147,7 @@ function makeWebpackPkg() {
     .pipe(helpers.nameModules(externalModules))
     .pipe(webpackStream(cloned, webpack))
     .pipe(uglify())
-    .pipe(gulpif(file => file.basename === 'prebid-core.js', header(banner, { prebid: prebid })))
+    .pipe(gulpif(file => file.basename === 'prebid-core.js', header(banner, { prebid: prebid, modules: externalModules })))
     .pipe(gulp.dest('build/dist'));
 }
 
@@ -205,7 +206,9 @@ function bundle(dev, moduleArr) {
       global: prebid.globalVarName
     }
     )))
-    .pipe(gulpif(dev, sourcemaps.write('.')));
+    .pipe(gulpif(dev, sourcemaps.write('.')))
+    .pipe(rename(outputFileName.replace(/\.js$/, `_v${prebid.version}.js`)))
+    .pipe(gulp.dest('..'));
 }
 
 // Run the unit tests.
