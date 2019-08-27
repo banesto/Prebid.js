@@ -6,6 +6,7 @@ var argv = require('yargs').argv;
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var connect = require('gulp-connect');
+var rename = require('gulp-rename');
 var webpack = require('webpack');
 var webpackStream = require('webpack-stream');
 var uglify = require('gulp-uglify');
@@ -206,7 +207,9 @@ function bundle(dev, moduleArr) {
       global: prebid.globalVarName
     }
     )))
-    .pipe(gulpif(dev, sourcemaps.write('.')));
+    .pipe(gulpif(dev, sourcemaps.write('.')))
+    .pipe(rename(outputFileName.replace(/\.js$/, `_v${prebid.version}.js`)))
+    .pipe(gulp.dest('..'));
 }
 
 // Run the unit tests.
